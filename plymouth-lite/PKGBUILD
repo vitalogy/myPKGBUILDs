@@ -1,0 +1,47 @@
+# Maintainer: Michael Lange <linuxstuff@milaw.biz>
+
+buildarch=20
+
+pkgname='plymouth-lite'
+pkgver=r13.20eca2d
+pkgrel=1
+pkgdesc="Boot splash screen based on Fedora's Plymouth code"
+arch=('armv7h')
+url="https://github.com/vitalogy/plymouth-lite"
+depends=('libpng')
+conflicts=('plymouth')
+makedepends=('git')
+license=('GPL2')
+source=(git+https://github.com/vitalogy/plymouth-lite)
+
+md5sums=('SKIP')
+
+pkgver() {
+	cd "${pkgname}"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+	cd "${pkgname}"
+	make
+}
+
+package() {
+	cd "${srcdir}/${pkgname}"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	install -m755 ply-image "${pkgdir}/usr/bin/ply-image"
+	install -m755 systemd/plymouth-lite-wrapper.sh "${pkgdir}/usr/bin/plymouth-lite-wrapper.sh"
+
+	install -dm755 "${pkgdir}/etc"
+	install -m755 systemd/plymouth-lite.conf "${pkgdir}/etc/plymouth-lite.conf"
+
+	install -dm755 "${pkgdir}/usr/lib/systemd/system"
+	install -m644 systemd/plymouth-lite-lcd.service "${pkgdir}/usr/lib/systemd/system/plymouth-lite-lcd.service"
+	install -m644 systemd/plymouth-lite-fbtft.service "${pkgdir}/usr/lib/systemd/system/plymouth-lite-fbtft.service"
+
+	install -dm755 "${pkgdir}/usr/share/plymouth-lite"
+	install -m644 splash/splash.png "${pkgdir}/usr/share/plymouth-lite/splash.png"
+	install -m644 splash/archlinuxarm.png "${pkgdir}/usr/share/plymouth-lite/archlinuxarm.png"
+	install -m644 splash/archlinuxarm-wide.png "${pkgdir}/usr/share/plymouth-lite/archlinuxarm-wide.png"
+}

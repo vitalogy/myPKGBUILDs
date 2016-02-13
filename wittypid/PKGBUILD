@@ -1,0 +1,38 @@
+# Maintainer: Michael Lange <linuxstuff@milaw.biz>
+
+buildarch=20
+
+pkgname='wittypid'
+pkgver=r26.ecbbd1c
+pkgrel=1
+pkgdesc="wittypid, daemon for the Witty Pi extension board"
+arch=('armv7h')
+url="https://github.com/vitalogy/wittypid"
+license=('GPL2')
+makedepends=('git' 'wiringx-git' 'confuse')
+source=(git+https://github.com/vitalogy/wittypid)
+md5sums=('SKIP')
+
+pkgver() {
+	cd "${pkgname}"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+	cd "${pkgname}"
+	make
+}
+
+package() {
+	cd "${srcdir}/${pkgname}"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	install -m755 wittypid "${pkgdir}/usr/bin/wittypid"
+
+	install -dm755 "${pkgdir}/usr/lib/systemd/system"
+	install -m644 hwclock.service "${pkgdir}/usr/lib/systemd/system/hwclock.service"
+	install -m644 wittypid.service "${pkgdir}/usr/lib/systemd/system/wittypid.service"
+
+	install -dm755 "${pkgdir}/etc"
+	install -m644 wittypid.conf "${pkgdir}/etc/wittypid.conf"
+}
