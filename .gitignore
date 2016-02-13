@@ -1,0 +1,8 @@
+# ignore everything
+*
+
+# except these
+!.gitignore
+!PKGBUILD
+!*.install
+!ChangeLog
