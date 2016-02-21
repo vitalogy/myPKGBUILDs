@@ -34,7 +34,7 @@ package() {
 	install -m755 systemd/plymouth-lite-wrapper.sh "${pkgdir}/usr/bin/plymouth-lite-wrapper.sh"
 
 	install -dm755 "${pkgdir}/etc"
-	install -m755 systemd/plymouth-lite.conf "${pkgdir}/etc/plymouth-lite.conf"
+	install -m644 systemd/plymouth-lite.conf "${pkgdir}/etc/plymouth-lite.conf"
 
 	install -dm755 "${pkgdir}/usr/lib/systemd/system"
 	install -m644 systemd/plymouth-lite-lcd.service "${pkgdir}/usr/lib/systemd/system/plymouth-lite-lcd.service"
