@@ -3,7 +3,7 @@
 buildarch=20
 
 pkgname='wittypid'
-pkgver=r29.c0b971f
+pkgver=r30.12054a4
 pkgrel=1
 pkgdesc="wittypid, daemon for the Witty Pi extension board"
 arch=('armv7h')
@@ -30,7 +30,6 @@ package() {
 	install -m755 wittypid "${pkgdir}/usr/bin/wittypid"
 
 	install -dm755 "${pkgdir}/usr/lib/systemd/system"
-	install -m644 systemd/hwclock.service "${pkgdir}/usr/lib/systemd/system/hwclock.service"
 	install -m644 systemd/wittypid.service "${pkgdir}/usr/lib/systemd/system/wittypid.service"
 
 	install -dm755 "${pkgdir}/etc"
