@@ -3,35 +3,22 @@
 buildarch=20
 
 pkgname='wittypid'
-pkgver=r30.12054a4
-pkgrel=1
+pkgver=0.5
+pkgrel=0
 pkgdesc="wittypid, daemon for the Witty Pi extension board"
 arch=('armv7h')
 url="https://github.com/vitalogy/wittypid"
 license=('GPL2')
 makedepends=('git' 'wiringx-git' 'confuse')
-source=(git+https://github.com/vitalogy/wittypid)
-md5sums=('SKIP')
-
-pkgver() {
-	cd "${pkgname}"
-	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
-}
+source=(https://github.com/vitalogy/wittypid/archive/v${pkgver}.tar.gz)
+md5sums=('4121e3d361a08b6891b9acc77a600ca0')
 
 build() {
-	cd "${pkgname}"
+	cd "${srcdir}/${pkgname}-${pkgver}"
 	make
 }
 
 package() {
-	cd "${srcdir}/${pkgname}"
-
-	install -dm755 "${pkgdir}/usr/bin"
-	install -m755 wittypid "${pkgdir}/usr/bin/wittypid"
-
-	install -dm755 "${pkgdir}/usr/lib/systemd/system"
-	install -m644 systemd/wittypid.service "${pkgdir}/usr/lib/systemd/system/wittypid.service"
-
-	install -dm755 "${pkgdir}/etc"
-	install -m644 systemd/wittypid.conf "${pkgdir}/etc/wittypid.conf"
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	make DESTDIR="$pkgdir" install_all
 }
