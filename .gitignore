@@ -6,3 +6,4 @@
 !PKGBUILD
 !*.install
 !ChangeLog
+!*-git

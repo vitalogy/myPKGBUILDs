@@ -1,0 +1,29 @@
+# Maintainer: Michael Lange <linuxstuff@milaw.biz>
+
+buildarch=20
+
+pkgname='wittypid'
+pkgver=r1.21cbfc2
+pkgrel=1
+pkgdesc="wittypid, daemon for the Witty Pi extension board"
+arch=('armv7h')
+url="https://github.com/vitalogy/wittypid"
+license=('GPL2')
+makedepends=('git' 'wiringx-git' 'confuse')
+source=(git+https://github.com/vitalogy/wittypid)
+md5sums=('SKIP')
+
+pkgver() {
+	cd "${pkgname}"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+	cd "${srcdir}/${pkgname}"
+	make
+}
+
+package() {
+	cd "${srcdir}/${pkgname}"
+	make DESTDIR="$pkgdir" install_all
+}
