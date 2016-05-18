@@ -9,7 +9,8 @@ pkgdesc="wittypid, daemon for the Witty Pi extension board"
 arch=('armv7h')
 url="https://github.com/vitalogy/wittypid"
 license=('GPL2')
-makedepends=('git' 'wiringx-git' 'confuse')
+depends=('wiringx-git' 'confuse')
+makedepends=('git')
 source=(git+https://github.com/vitalogy/wittypid)
 md5sums=('SKIP')
 
