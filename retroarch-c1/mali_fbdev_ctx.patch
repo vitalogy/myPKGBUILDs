@@ -1,0 +1,14 @@
+--- RetroArch-a/gfx/drivers_context/mali_fbdev_ctx.c	2016-07-23 21:17:51.807834029 +0200
++++ RetroArch-b/gfx/drivers_context/mali_fbdev_ctx.c	2016-07-23 21:18:59.597760821 +0200
+@@ -36,6 +36,11 @@
+ #include "../common/gl_common.h"
+ #endif
+
++struct mali_native_window {
++   unsigned short width;
++   unsigned short height;
++};
++
+ typedef struct
+ {
+ #ifdef HAVE_EGL

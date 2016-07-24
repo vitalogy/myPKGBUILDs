@@ -1,0 +1,15 @@
+post_install() {
+  getent group retro > /dev/null || groupadd -r retro
+  getent passwd retro > /dev/null || useradd -r -m -d /var/lib/retro -g retro -s /usr/bin/nologin retro
+  usermod -a -G kodi,audio,video,power,network,optical,storage,disk retro
+  mkdir -p var/lib/retro
+  chown -R retro:retro var/lib/retro
+}
+
+post_upgrade() {
+  post_install $1
+}
+
+post_remove() {
+  getent passwd retro > /dev/null && userdel retro
+}
