@@ -1,0 +1,214 @@
+##########################################
+#
+# PKGBUILD for prebuild java8-ezdk
+#  based on PKGBUILD from java8-openjdk
+#
+# Embedded Zulu Java Development Kit
+#
+# Zulu Embedded is a certified build of OpenJDK that is fully compliant with the Java SE standard.
+# Zulu is copyrighted software based on OpenJDK (http://openjdk.java.net/) and is 100% open source.
+#
+#########################################
+
+# armv7h only for now
+buildarch=4
+
+pkgbase=java8-ezdk
+pkgname=('jre8-ezdk-headless' 'jre8-ezdk' 'jdk8-ezdk' 'ezdk8-src')
+
+license=('GPL-2.0-with-classpath-exception')
+
+_java_ver=8
+
+# version for ARM 32bit v8/v7/v6 Hard Float ABI
+# from http://www.azul.com/downloads/zulu-embedded/
+_jdk_update=112
+_ezdk_build=8.19.0.31
+_ezdk_ver=ezdk-1.${_java_ver}.0_${_jdk_update}-${_ezdk_build}
+_ezdk_arch=aarch32
+source_armv7h=("${_ezdk_ver}.tar.gz::http://cdn.azul.com/zulu-embedded/bin/${_ezdk_ver}-eval-linux_${_ezdk_arch}hf.tar.gz")
+
+pkgver=jdk${_java_ver}.u${_jdk_update}
+pkgrel=1
+arch=('armv7h')
+url='http://www.azul.com/'
+
+sha256sums_armv7h=("142c7d4243f7cc137956fe59c2d2b0553e04c53695481374d392f683a8f7e9b0")
+
+_jdkname=ezdk8
+_jvmdir=/usr/lib/jvm/java-8-ezdk
+_imgdir="${_ezdk_ver}-eval-linux_${_ezdk_arch}hf"
+_nonheadless=(bin/policytool
+              lib/${_ezdk_arch}/libjsound.so
+              lib/${_ezdk_arch}/libjsoundalsa.so
+			  lib/${_ezdk_arch}/libsplashscreen.so)
+
+
+package_jre8-ezdk-headless() {
+  pkgdesc='Embedded Zulu Java 8 headless runtime environment'
+  depends=('java-runtime-common' 'ca-certificates-utils' 'nss')
+  optdepends=('java-rhino: for some JavaScript support')
+  provides=('java-runtime-headless=8' 'java-runtime-headless-openjdk=8')
+  # Upstream config files that should go to etc and get backup
+  _backup_etc=(etc/java-8-ezdk/${_ezdk_arch}/jvm.cfg
+               etc/java-8-ezdk/calendars.properties
+               etc/java-8-ezdk/content-types.properties
+               etc/java-8-ezdk/flavormap.properties
+               etc/java-8-ezdk/images/cursors/cursors.properties
+               etc/java-8-ezdk/logging.properties
+               etc/java-8-ezdk/management/jmxremote.access
+               etc/java-8-ezdk/management/jmxremote.password
+               etc/java-8-ezdk/management/management.properties
+               etc/java-8-ezdk/management/snmp.acl
+               etc/java-8-ezdk/net.properties
+               etc/java-8-ezdk/psfont.properties.ja
+               etc/java-8-ezdk/psfontj2d.properties
+               etc/java-8-ezdk/security/java.policy
+               etc/java-8-ezdk/security/java.security
+               etc/java-8-ezdk/sound.properties)
+  backup=(${_backup_etc[@]})
+  install=jre8-ezdk-headless.install
+
+  cd "${srcdir}/${_imgdir}"
+
+  # http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1437
+  find . -iname '*.jar' -exec chmod ugo+r {} \;
+  chmod ugo+r lib/ct.sym
+
+  # remove redundant *diz and *debuginfo files
+  find . -iname '*.diz' -exec rm {} \;
+  find . -iname '*.debuginfo' -exec rm {} \;
+
+  cd "${srcdir}/${_imgdir}/jre"
+
+  install -d -m 755 "${pkgdir}${_jvmdir}/jre/"
+  cp -a bin lib "${pkgdir}${_jvmdir}/jre"
+
+  # Set config files
+  mv "${pkgdir}${_jvmdir}"/jre/lib/management/jmxremote.password{.template,}
+  mv "${pkgdir}${_jvmdir}"/jre/lib/management/snmp.acl{.template,}
+
+  # Remove 'non-headless' lib files
+  for f in ${_nonheadless[@]}; do
+    rm "${pkgdir}${_jvmdir}/jre/${f}"
+  done
+
+  # Man pages
+  pushd "${pkgdir}${_jvmdir}/jre/bin"
+  install -d -m 755 "${pkgdir}"/usr/share/man/{,ja/}man1/
+  for file in *; do
+    install -m 644 "${srcdir}/${_imgdir}/man/man1/${file}.1" \
+      "${pkgdir}/usr/share/man/man1/${file}-${_jdkname}.1"
+    install -m 644 "${srcdir}/${_imgdir}/man/ja/man1/${file}.1" \
+      "${pkgdir}/usr/share/man/ja/man1/${file}-${_jdkname}.1"
+  done
+  popd
+
+  # Link JKS keystore from ca-certificates-utils
+  rm -f "${pkgdir}${_jvmdir}/jre/lib/security/cacerts"
+  ln -sf /etc/ssl/certs/java/cacerts "${pkgdir}${_jvmdir}/jre/lib/security/cacerts"
+
+  # Install license
+  install -d -m 755 "${pkgdir}/usr/share/licenses/${pkgbase}/"
+  install -m 644 ASSEMBLY_EXCEPTION LICENSE THIRD_PARTY_README \
+                 "${pkgdir}/usr/share/licenses/${pkgbase}"
+  ln -sf /usr/share/licenses/${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  # Move config files that were set in _backup_etc from ./lib to /etc
+  for file in ${_backup_etc[@]}; do
+    _filepkgpath=${_jvmdir}/jre/lib/${file#etc/java-8-ezdk/}
+    install -D -m 644 "${pkgdir}${_filepkgpath}" "${pkgdir}/${file}"
+    ln -sf /${file} "${pkgdir}${_filepkgpath}"
+  done
+}
+
+package_jre8-ezdk() {
+  pkgdesc='Embedded Zulu Java 8 full runtime environment'
+  depends=("jre8-ezdk-headless=${pkgver}-${pkgrel}" 'xdg-utils' 'hicolor-icon-theme')
+  optdepends=('icedtea-web: web browser plugin + Java Web Start'
+              'alsa-lib: for basic sound support'
+              'gtk2: for the Gtk+ look and feel - desktop usage'
+              'java-openjfx: for JavaFX GUI components support')
+  # TODO when adding IcedTea: 'giflib: for gif format support'
+  # TODO when adding IcedTea: 'libpulse: for advanced sound support'
+  provides=('java-runtime=8' 'java-runtime-openjdk=8')
+  install=jre8-ezdk.install
+
+  cd "${srcdir}/${_imgdir}/jre"
+
+  # TODO? Should /usr/lib/jvm/java-8-ezdk/jre/lib/sound.properties belong to jre?
+  for f in ${_nonheadless[@]}; do
+    install -D ${f} "${pkgdir}${_jvmdir}/jre/${f}"
+  done
+
+  # Man pages
+  pushd "${pkgdir}${_jvmdir}/jre/bin"
+  install -d -m 755 "${pkgdir}"/usr/share/man/{,ja/}man1/
+  for file in *; do
+    install -m 644 "${srcdir}/${_imgdir}/man/man1/${file}.1" \
+      "${pkgdir}/usr/share/man/man1/${file}-${_jdkname}.1"
+    install -m 644 "${srcdir}/${_imgdir}/man/ja/man1/${file}.1" \
+      "${pkgdir}/usr/share/man/ja/man1/${file}-${_jdkname}.1"
+  done
+  popd
+
+  # Desktop files
+  # TODO add these when switching to IcedTea
+  #install -D -m 644 "${srcdir}/icedtea-${_icedtea_ver}/policytool.desktop" \
+  #                  "${pkgdir}/usr/share/applications/policytool.desktop"
+
+  # Install license
+  install -d -m 755 "${pkgdir}/usr/share/licenses/${pkgbase}/"
+  ln -sf /usr/share/licenses/${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+package_jdk8-ezdk() {
+  pkgdesc='Embedded Zulu Java 8 development kit'
+  depends=('java-environment-common' "jre8-ezdkdk=${pkgver}-${pkgrel}")
+  provides=('java-environment=8' 'java-environment-openjdk=8')
+  replaces=('jdk8-openjdk-wm')
+  install=jdk8-ezdk.install
+
+  cd "${srcdir}/${_imgdir}"
+
+  # Main files
+  install -d -m 755 "${pkgdir}${_jvmdir}"
+
+  cp -a include lib "${pkgdir}${_jvmdir}"
+
+  # 'bin' files
+  pushd bin
+
+  # 'java-rmi.cgi' will be handled separately as it should not be in the PATH and has no man page
+  for b in $(ls | grep -v java-rmi.cgi); do
+    if [ -e ../jre/bin/${b} ]; then
+      # Provide a link of the jre binary in the jdk/bin/ directory
+      ln -s ../jre/bin/${b} "${pkgdir}${_jvmdir}/bin/${b}"
+    else
+      # Copy binary to jdk/bin/
+      install -D -m 755 ${b} "${pkgdir}${_jvmdir}/bin/${b}"
+      # Copy man page
+      install -D -m 644 ../man/man1/${b}.1 "${pkgdir}/usr/share/man/man1/${b}-${_jdkname}.1"
+      install -D -m 644 ../man/ja/man1/${b}.1 "${pkgdir}/usr/share/man/ja/man1/${b}-${_jdkname}.1"
+    fi
+  done
+  popd
+
+  # Handling 'java-rmi.cgi' separately
+  install -D -m 755 bin/java-rmi.cgi "${pkgdir}${_jvmdir}/bin/java-rmi.cgi"
+
+  # Desktop files.
+  # TODO add these when switching to IcedTea
+  #install -m 644 "${srcdir}/icedtea-${_icedtea_ver}/jconsole.desktop" \
+  #  "${pkgdir}/usr/share/applications"
+
+  # link license
+  install -d -m 755 "${pkgdir}/usr/share/licenses/"
+  ln -sf /usr/share/licenses/${pkgbase} "${pkgdir}/usr/share/licenses/${pkgname}"
+}
+
+package_ezdk8-src() {
+  pkgdesc='Embedded Zulu Java 8 sources'
+
+  install -D "${srcdir}/${_imgdir}/src.zip" "${pkgdir}${_jvmdir}/src.zip"
+}
