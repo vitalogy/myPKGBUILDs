@@ -26,7 +26,8 @@ _jdk_update=112
 _ezdk_build=8.19.0.31
 _ezdk_ver=ezdk-1.${_java_ver}.0_${_jdk_update}-${_ezdk_build}
 _ezdk_arch=aarch32
-source_armv7h=("${_ezdk_ver}.tar.gz::http://cdn.azul.com/zulu-embedded/bin/${_ezdk_ver}-eval-linux_${_ezdk_arch}hf.tar.gz")
+_ezdk_url=${_ezdk_ver}-eval-linux_${_ezdk_arch}hf.tar.gz
+source_armv7h=("${_ezdk_ver}.tar.gz::http://cdn.azul.com/zulu-embedded/bin/${_ezdk_url}")
 
 pkgver=jdk${_java_ver}.u${_jdk_update}
 pkgrel=1
@@ -164,7 +165,7 @@ package_jre8-ezdk() {
 
 package_jdk8-ezdk() {
   pkgdesc='Embedded Zulu Java 8 development kit'
-  depends=('java-environment-common' "jre8-ezdkdk=${pkgver}-${pkgrel}")
+  depends=('java-environment-common' "jre8-ezdk=${pkgver}-${pkgrel}")
   provides=('java-environment=8' 'java-environment-openjdk=8')
   replaces=('jdk8-openjdk-wm')
   install=jdk8-ezdk.install
