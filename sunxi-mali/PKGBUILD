@@ -1,0 +1,72 @@
+# Maintainer: Michael Lange <linuxstuff@milaw.biz>
+
+
+#_linux=linux-armv7
+_linux=linux-armv7-rc
+
+_maliver=r6p0
+
+
+pkgname=sunxi-mali
+pkgver=r6p0.4588d4f
+pkgrel=1
+pkgdesc="Mali kernel modul for sunxi devices"
+arch=('armv7h')
+url="https://github.com/mripard/sunxi-mali"
+license=(GPL)
+options=('!distcc')
+makedepends=('git' 'linux-headers')
+install=$pkgname.install
+source=("git+https://github.com/mripard/sunxi-mali.git"
+		"https://raw.githubusercontent.com/torvalds/linux/master/mm/cma.h")
+sha256sums=('SKIP'
+			'SKIP')
+
+_kernver=$(pacman -Q ${_linux} | sed -r 's#.* ([0-9]+\.[0-9]+).*#\1#')
+_extramodules=extramodules-${_kernver}-armv7-rc
+KERNEL_VERSION=$(cat /usr/lib/modules/${_extramodules}/version)
+
+prepare() {
+	cd "$srcdir/$pkgname/$_maliver"
+
+	if [[ "$_maliver" == "r6p0" ]]; then
+		echo "1"
+		rm ../patches/0006*
+	fi
+
+	for p in ../patches/*; do
+      	patch -p1 < $p
+    done
+
+	sed 's/export CROSS_COMPILE/#export CROSS_COMPILE/' -i src/devicedrv/mali/Makefile
+
+	# hack around the hack
+	# see https://github.com/mripard/sunxi-mali/blob/master/patches/0005-mali-Add-sunxi-platform.patch#L39
+	cat "$srcdir/cma.h" > "$srcdir/$pkgname/$_maliver/src/devicedrv/mali/cma.h"
+	sed 's/#include <..\/mm\/cma.h>/#include "..\/..\/cma.h"/' -i src/devicedrv/mali/platform/sunxi/sunxi.c
+}
+
+pkgver() {
+	cd "$srcdir/$_gitname"
+	echo $_maliver.$(git rev-parse --short HEAD)
+}
+
+build() {
+	msg "Building for Kernel $KERNEL_VERSION"
+
+	cd "$srcdir/$pkgname/$_maliver"
+	ARCH=arm USING_UMP=0 BUILD=release USING_PROFILING=0 \
+		USING_DVFS=1 USING_DEVFREQ=1 MALI_PLATFORM=sunxi \
+		KDIR=/usr/lib/modules/${KERNEL_VERSION}/build \
+		make -C src/devicedrv/mali/
+}
+
+package() {
+	depends=("$_linux>=$_kernver" "$_linux<${_kernver/.*}.$(expr ${_kernver/*.} + 1)")
+
+	cd "$srcdir/$pkgname/$_maliver"
+	install -Dm644 src/devicedrv/mali/mali.ko "$pkgdir/usr/lib/modules/$_extramodules/mali.ko"
+	find "$pkgdir" -name '*.ko' -exec gzip -9 {} +
+
+	sed -i "s/extramodules-.*'/$_extramodules'/" -i $startdir/$pkgname.install
+}
