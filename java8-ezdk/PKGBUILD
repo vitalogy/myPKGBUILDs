@@ -22,8 +22,8 @@ _java_ver=8
 
 # version for ARM 32bit v8/v7/v6 Hard Float ABI
 # from http://www.azul.com/downloads/zulu-embedded/
-_jdk_update=112
-_ezdk_build=8.19.0.31
+_jdk_update=121
+_ezdk_build=8.20.0.42
 _ezdk_ver=ezdk-1.${_java_ver}.0_${_jdk_update}-${_ezdk_build}
 _ezdk_arch=aarch32
 _ezdk_url=${_ezdk_ver}-eval-linux_${_ezdk_arch}hf.tar.gz
@@ -34,7 +34,7 @@ pkgrel=1
 arch=('armv7h')
 url='http://www.azul.com/'
 
-sha256sums_armv7h=("142c7d4243f7cc137956fe59c2d2b0553e04c53695481374d392f683a8f7e9b0")
+sha256sums_armv7h=("f1bf9f78098398bf6e38b9ffbca175bf1b0ba4f85a3f367231b75565a1bbc042")
 
 _jdkname=ezdk8
 _jvmdir=/usr/lib/jvm/java-8-ezdk
@@ -42,7 +42,7 @@ _imgdir="${_ezdk_ver}-eval-linux_${_ezdk_arch}hf"
 _nonheadless=(bin/policytool
               lib/${_ezdk_arch}/libjsound.so
               lib/${_ezdk_arch}/libjsoundalsa.so
-			  lib/${_ezdk_arch}/libsplashscreen.so)
+              lib/${_ezdk_arch}/libsplashscreen.so)
 
 
 package_jre8-ezdk-headless() {
